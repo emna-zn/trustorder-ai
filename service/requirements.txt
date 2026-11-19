@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+scikit-learn
+numpy
+joblib
+openpyxl
+pymupdf
+pillow
+pytesseract
+httpx
+pytest

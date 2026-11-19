@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.env
+*.joblib
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# PHP / Symfony
+backend/vendor/
+backend/var/
+backend/.env
+backend/.env.local
+
+# Node (si utilisé plus tard)
+node_modules/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.swp
+
+# Données locales
+data/*.db
+!data/.gitkeep

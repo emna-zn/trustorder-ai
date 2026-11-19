@@ -1,0 +1,24 @@
+parameters:
+    app.phone_secret: '%env(TRUSTORDER_SECRET)%'
+    app.fastapi_url: '%env(FASTAPI_URL)%'
+    app.internal_token: '%env(TRUSTORDER_INTERNAL_TOKEN)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'
+            - '../src/Infrastructure/Persistence/Entity/'
+
+    App\Domain\Service\PhoneHasher:
+        arguments:
+            $secret: '%app.phone_secret%'
+
+    App\Infrastructure\Scoring\FastApiClient:
+        arguments:
+            $baseUrl: '%app.fastapi_url%'
+            $token: '%app.internal_token%'
