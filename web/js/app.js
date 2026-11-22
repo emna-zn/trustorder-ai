@@ -89,61 +89,166 @@ function paint() {
   route();
 }
 
+const GOUVERNORATS = ["Ariana", "Béja", "Ben Arous", "Bizerte", "Gabès", "Gafsa", "Jendouba", "Kairouan", "Kasserine", "Kébili",
+  "Le Kef", "Mahdia", "La Manouba", "Médenine", "Monastir", "Nabeul", "Sfax", "Sidi Bouzid", "Siliana", "Sousse",
+  "Tataouine", "Tozeur", "Tunis", "Zaghouan"];
+
+let authTab = "login";
+
 function loginView() {
+  const field = (icon, label, input) => `<label class="lg-field"><span class="lg-label">${label}</span><span class="lg-input"><i class="bi ${icon}"></i>${input}</span></label>`;
   return `
-  <div class="auth-wrap">
-    <section class="auth-brand">
-      <div>
+  <div class="lg-wrap">
+    <section class="lg-brand">
+      <div class="lg-brand-top">
         <div class="brand-mark"><div class="logo-badge"><i class="bi bi-shield-check"></i></div>
           <div><strong>TrustOrder AI</strong><span>COD · Tunisie</span></div></div>
-        <h1>Prioriser les commandes à la livraison, sans accuser un client.</h1>
-        <p class="lead">Le score est un indicateur de risque calculé par le moteur Python des Sprints 1 et 2. L'historique insuffisant reste en cold start : pas de probabilité inventée.</p>
-        <div class="auth-points">
-          <div><i class="bi bi-check2-circle"></i> Score 0–100, niveaux LOW / MEDIUM / HIGH</div>
-          <div><i class="bi bi-check2-circle"></i> Priorité distincte du score de fiabilité</div>
-          <div><i class="bi bi-check2-circle"></i> Import CSV, Excel et PDF texte, avec vérification humaine</div>
+        <span class="lg-chip"><i class="bi bi-stars"></i> Paiement à la livraison</span>
+      </div>
+      <div class="lg-hero">
+        <h1>Livrez avec confiance.<br><em>Priorisez</em> les commandes qui comptent.</h1>
+        <p class="lead">TrustOrder AI analyse l'historique de chaque numéro et vous indique quelles commandes confirmer en premier, sans jamais accuser un client.</p>
+        <div class="lg-features">
+          <article><i class="bi bi-speedometer2"></i><div><b>Score de fiabilité 0–100</b><span>Niveaux LOW, MEDIUM, HIGH expliqués facteur par facteur.</span></div></article>
+          <article><i class="bi bi-lightning-charge"></i><div><b>Priorisation intelligente</b><span>Les commandes à vérifier remontent en tête de liste.</span></div></article>
+          <article><i class="bi bi-file-earmark-arrow-up"></i><div><b>Import CSV, Excel et PDF</b><span>Colonnes détectées, lignes contrôlées avant enregistrement.</span></div></article>
+          <article><i class="bi bi-lock"></i><div><b>Numéros protégés</b><span>Téléphones masqués et hachés, vos données restent les vôtres.</span></div></article>
         </div>
       </div>
-      <p class="fine">Données 100 % fictives · numéros +216 générés · aucune personne réelle.</p>
+      <p class="fine lg-foot">© TrustOrder AI · Données de démonstration fictives, aucune personne réelle.</p>
     </section>
-    <section class="auth-panel">
-      <form class="auth-card" id="login-form">
-        <h2>Connexion</h2>
-        <p class="fine">Session de démonstration. L'authentification Symfony Security est dans le backend source, elle n'est pas exécutée dans cet aperçu.</p>
-        <div class="demo-accounts">
-          <button type="button" data-fill="emna.bensalah@maison-emna.tn|Boutique2026!">
-            Emna Ben Salah <small>Boutique Maison Emna · Boutique2026!</small>
-          </button>
-          <button type="button" data-fill="admin@trustorder.tn|Admin2026!">
-            Sami Khelifi <small>Administrateur · Admin2026!</small>
-          </button>
+
+    <section class="lg-panel">
+      <div class="lg-card ${authTab === "register" ? "wide" : ""}">
+        <div class="lg-tabs" role="tablist">
+          <button type="button" role="tab" class="${authTab === "login" ? "on" : ""}" data-tab="login"><i class="bi bi-box-arrow-in-right"></i> Connexion</button>
+          <button type="button" role="tab" class="${authTab === "register" ? "on" : ""}" data-tab="register"><i class="bi bi-shop"></i> Créer ma boutique</button>
         </div>
-        <label class="form-label">E-mail</label>
-        <input class="form-control mb-2" name="email" type="email" required autocomplete="username">
-        <label class="form-label">Mot de passe</label>
-        <input class="form-control mb-3" name="password" type="password" required autocomplete="current-password">
-        <button class="btn btn-accent w-100" type="submit">Entrer</button>
-      </form>
+
+        ${authTab === "login" ? `
+        <form id="login-form" novalidate>
+          <h2>Bon retour 👋</h2>
+          <p class="lg-sub">Connectez-vous pour suivre vos commandes et vos risques de livraison.</p>
+          ${field("bi-envelope", "Adresse e-mail", `<input name="email" type="email" required autocomplete="username" placeholder="vous@boutique.tn">`)}
+          ${field("bi-lock", "Mot de passe", `<input name="password" type="password" required autocomplete="current-password" placeholder="Votre mot de passe"><button type="button" class="lg-eye" data-eye aria-label="Afficher le mot de passe"><i class="bi bi-eye"></i></button>`)}
+          <button class="btn btn-accent lg-submit" type="submit"><span>Se connecter</span></button>
+          <p class="lg-switch">Pas encore de compte ? <a href="#" data-tab="register">Créer ma boutique</a></p>
+          <details class="lg-demo">
+            <summary><i class="bi bi-play-circle"></i> Accès démonstration</summary>
+            <div class="lg-demo-list">
+              <button type="button" data-fill="emna.bensalah@maison-emna.tn|Boutique2026!"><b>Boutique</b><span>Maison Emna</span></button>
+              <button type="button" data-fill="admin@trustorder.tn|Admin2026!"><b>Administrateur</b><span>Vue globale</span></button>
+            </div>
+            <p class="fine">Cliquez sur un profil pour pré-remplir le formulaire.</p>
+          </details>
+        </form>` : `
+        <form id="register-form" novalidate>
+          <h2>Ouvrez votre espace boutique</h2>
+          <p class="lg-sub">Quelques informations suffisent. Votre compte est actif immédiatement.</p>
+          <div class="lg-section"><i class="bi bi-shop"></i> Votre boutique</div>
+          ${field("bi-bag", "Nom de la boutique", `<input name="shop_name" required maxlength="120" placeholder="Ex. Maison Emna">`)}
+          <div class="lg-row">
+            ${field("bi-geo-alt", "Gouvernorat", `<select name="governorate" required><option value="">Choisir…</option>${GOUVERNORATS.map((g) => `<option>${esc(g)}</option>`).join("")}</select>`)}
+            ${field("bi-pin-map", "Ville", `<input name="city" required maxlength="80" placeholder="Ex. Mahdia">`)}
+          </div>
+          ${field("bi-signpost", "Adresse", `<input name="address" required maxlength="200" placeholder="Rue, quartier">`)}
+          <div class="lg-section"><i class="bi bi-person-badge"></i> Votre compte</div>
+          ${field("bi-person", "Nom et prénom", `<input name="full_name" required maxlength="120" autocomplete="name" placeholder="Ex. Emna Ben Salah">`)}
+          ${field("bi-envelope", "Adresse e-mail", `<input name="email" type="email" required autocomplete="email" placeholder="vous@boutique.tn">`)}
+          <div class="lg-row">
+            ${field("bi-lock", "Mot de passe", `<input name="password" type="password" required minlength="8" autocomplete="new-password" placeholder="8 caractères minimum"><button type="button" class="lg-eye" data-eye aria-label="Afficher le mot de passe"><i class="bi bi-eye"></i></button>`)}
+            ${field("bi-shield-lock", "Confirmation", `<input name="password2" type="password" required autocomplete="new-password" placeholder="Répétez le mot de passe">`)}
+          </div>
+          <div class="lg-meter" aria-hidden="true"><i></i><i></i><i></i><i></i><span id="pw-hint">Utilisez 8 caractères, avec lettres et chiffres.</span></div>
+          <button class="btn btn-accent lg-submit" type="submit"><span>Créer ma boutique</span></button>
+          <p class="lg-switch">Déjà inscrit ? <a href="#" data-tab="login">Se connecter</a></p>
+        </form>`}
+      </div>
     </section>
   </div>`;
 }
 
+function setBusy(form, busy, label) {
+  const b = form.querySelector(".lg-submit");
+  b.disabled = busy;
+  b.innerHTML = busy ? `<span class="spinner-border spinner-border-sm me-2"></span>${label}` : `<span>${label}</span>`;
+}
+
+function passwordScore(pw) {
+  let n = 0;
+  if (pw.length >= 8) n++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) n++;
+  if (/\d/.test(pw)) n++;
+  if (/[^A-Za-z0-9]/.test(pw) || pw.length >= 12) n++;
+  return n;
+}
+
 function bindLogin() {
+  document.querySelectorAll("[data-tab]").forEach((el) => el.addEventListener("click", (e) => {
+    e.preventDefault();
+    authTab = el.dataset.tab;
+    app().innerHTML = loginView();
+    bindLogin();
+  }));
+  document.querySelectorAll("[data-eye]").forEach((btn) => btn.addEventListener("click", () => {
+    const input = btn.parentElement.querySelector("input");
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    btn.querySelector("i").className = "bi " + (show ? "bi-eye-slash" : "bi-eye");
+  }));
   document.querySelectorAll("[data-fill]").forEach((btn) => btn.addEventListener("click", () => {
     const [email, password] = btn.dataset.fill.split("|");
     $("[name=email]").value = email;
     $("[name=password]").value = password;
   }));
-  $("#login-form").addEventListener("submit", async (e) => {
+
+  const login = $("#login-form");
+  if (login) login.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const fd = new FormData(e.target);
+    const fd = new FormData(login);
+    if (!fd.get("email") || !fd.get("password")) { toast("Saisissez votre e-mail et votre mot de passe.", "err"); return; }
+    setBusy(login, true, "Connexion…");
     try {
       me = await api("/login", { method: "POST", body: { email: fd.get("email"), password: fd.get("password") } });
       notif = await api("/notifications");
-      location.hash = "#/dashboard";
+      location.hash = me.role === "ADMIN" ? "#/admin/stats" : "#/dashboard";
       paint();
-    } catch (err) { toast(err.message, "err"); }
+    } catch (err) { toast(err.message, "err"); setBusy(login, false, "Se connecter"); }
   });
+
+  const reg = $("#register-form");
+  if (reg) {
+    const pw = reg.querySelector("[name=password]");
+    const bars = reg.querySelectorAll(".lg-meter i");
+    const hint = $("#pw-hint");
+    const labels = ["Utilisez 8 caractères, avec lettres et chiffres.", "Faible", "Moyen", "Bon", "Excellent"];
+    pw.addEventListener("input", () => {
+      const sc = passwordScore(pw.value);
+      bars.forEach((b, i) => { b.className = i < sc ? "on s" + sc : ""; });
+      hint.textContent = pw.value ? labels[sc] : labels[0];
+    });
+    reg.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(reg);
+      const v = (k) => String(fd.get(k) || "").trim();
+      if (["shop_name", "governorate", "city", "address", "full_name", "email"].some((k) => !v(k))) { toast("Remplissez tous les champs.", "err"); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email"))) { toast("Adresse e-mail invalide.", "err"); return; }
+      if (fd.get("password").length < 8) { toast("Le mot de passe doit contenir au moins 8 caractères.", "err"); return; }
+      if (fd.get("password") !== fd.get("password2")) { toast("Les deux mots de passe ne correspondent pas.", "err"); return; }
+      setBusy(reg, true, "Création…");
+      try {
+        me = await api("/register-shop", { method: "POST", body: {
+          shop_name: v("shop_name"), governorate: v("governorate"), city: v("city"), address: v("address"),
+          full_name: v("full_name"), email: v("email"), password: String(fd.get("password")),
+        } });
+        notif = await api("/notifications").catch(() => notif);
+        toast(`Bienvenue ! La boutique « ${me.boutique ? me.boutique.name : v("shop_name")} » est créée.`);
+        authTab = "login";
+        location.hash = "#/dashboard";
+        paint();
+      } catch (err) { toast(err.message, "err"); setBusy(reg, false, "Créer ma boutique"); }
+    });
+  }
 }
 
 function navItem(path, icon, label, badge) {
@@ -154,15 +259,12 @@ function navItem(path, icon, label, badge) {
 
 function shellView() {
   const shop = me.role === "SHOP";
-  const adminBlock = me.role === "ADMIN" ? `
-    <div class="nav-label">ADMINISTRATION</div>
-    ${navItem("/admin", "bi-gear", "Administration")}
-    ${navItem("/admin/stats", "bi-bar-chart", "Statistiques globales")}` : "";
   return `
-  <div class="shell" id="shell">
+  <div class="shell ${shop ? "" : "admin"}" id="shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand-mark px-2 mb-2"><div class="logo-badge"><i class="bi bi-shield-check"></i></div>
         <div><strong>TrustOrder AI</strong><span>${shop ? "Console boutique" : "Console admin"}</span></div></div>
+      ${shop ? `
       <div class="nav-label">PILOTAGE</div>
       ${navItem("/dashboard", "bi-grid", "Tableau de bord")}
       ${navItem("/orders", "bi-box", "Commandes")}
@@ -170,12 +272,22 @@ function shellView() {
       <div class="nav-label">INTELLIGENCE</div>
       ${navItem("/priority", "bi-lightning", "Priorisation IA")}
       ${navItem("/scoring", "bi-shield", "Scoring & Risque")}
-      ${shop ? navItem("/import", "bi-file-earmark-arrow-up", "Import Excel / OCR") : ""}
+      ${navItem("/import", "bi-file-earmark-arrow-up", "Import Excel / OCR")}
       <div class="nav-label">GESTION</div>
       ${navItem("/complaints", "bi-exclamation-triangle", "Signalements", notif.count || "")}
       ${navItem("/contestations", "bi-chat-left-text", "Contestations")}
-      ${navItem("/history", "bi-clock-history", "Historique IA")}
-      ${adminBlock}
+      ${navItem("/history", "bi-clock-history", "Historique IA")}` : `
+      <div class="nav-label">SUPERVISION</div>
+      ${navItem("/admin/stats", "bi-speedometer2", "Vue d'ensemble")}
+      ${navItem("/orders", "bi-eye", "Suivi des commandes")}
+      ${navItem("/history", "bi-clock-history", "Analyses du moteur")}
+      <div class="nav-label">ARBITRAGE</div>
+      ${navItem("/complaints", "bi-exclamation-triangle", "Signalements", notif.count || "")}
+      ${navItem("/contestations", "bi-chat-left-text", "Contestations")}
+      <div class="nav-label">ADMINISTRATION</div>
+      ${navItem("/admin/shops", "bi-shop", "Boutiques et comptes")}
+      ${navItem("/admin/engine", "bi-sliders", "Paramètres du moteur")}
+      ${navItem("/admin/audit", "bi-journal-text", "Journal d'audit")}`}
       <div class="side-user">
         ${avatar(me.full_name)}
         <div class="who"><strong>${esc(me.full_name)}</strong><span>${esc(me.boutique?.name || me.email)}</span></div>
@@ -227,7 +339,7 @@ function bindShell() {
   $("#quick-search").addEventListener("submit", (e) => {
     e.preventDefault();
     const q = new FormData(e.target).get("q");
-    location.hash = "#/verify?q=" + encodeURIComponent(q || "");
+    location.hash = (me.role === "ADMIN" ? "#/orders?q=" : "#/verify?q=") + encodeURIComponent(q || "");
   });
   $("#bell").addEventListener("click", () => {
     const pop = $("#bell-pop");
@@ -281,6 +393,10 @@ function setGreet(title, sub) {
 
 async function route() {
   const { path, params } = parseHash();
+  if (me && me.role === "ADMIN" && ["/dashboard", "/verify", "/priority", "/scoring", "/import"].includes(path)) {
+    location.hash = "#/admin/stats";
+    return;
+  }
   document.querySelectorAll(".side-link").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + path));
   const view = $("#view");
   if (!view) return;
@@ -355,27 +471,41 @@ async function renderDashboard(view) {
     </section>`;
 }
 
+// Une commande ajoutée il y a moins de 15 minutes reçoit le badge « Nouveau ».
+function isNew(createdAt) {
+  const t = createdAt ? new Date(createdAt).getTime() : NaN;
+  return !Number.isNaN(t) && Date.now() - t < 15 * 60 * 1000;
+}
+
 async function renderOrders(view, params) {
-  setGreet("Commandes", "Historique de votre boutique. Les autres boutiques ne voient pas ces lignes.");
+  const isAdmin = me.role === "ADMIN";
+  setGreet(isAdmin ? "Supervision des commandes" : "Commandes",
+    isAdmin ? "Lecture seule : l'administrateur consulte les commandes de toutes les boutiques, mais ne peut pas les modifier." : "Historique de votre boutique. Les autres boutiques ne voient pas ces lignes.");
   const page = Number(params.get("page") || 1);
   const status = params.get("status") || "";
   const q = params.get("q") || "";
-  const data = await api(`/orders?page=${page}&status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}`);
+  const shopId = isAdmin ? Number(params.get("shop") || 0) : 0;
+  const [data, shops] = await Promise.all([
+    api(`/orders?page=${page}&status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}${shopId ? `&boutique_id=${shopId}` : ""}`),
+    isAdmin ? api("/admin/boutiques") : Promise.resolve(null),
+  ]);
   view.innerHTML = `
     <form class="filters" id="order-filters">
       <input class="form-control" style="max-width:260px" name="q" value="${esc(q)}" placeholder="Client, produit, téléphone">
       <select class="form-select" style="max-width:200px" name="status">
         ${["", "PENDING", "DELIVERED", "REFUSED", "NOT_COLLECTED"].map((s) => `<option value="${s}" ${s === status ? "selected" : ""}>${s ? STATUS[s][0] : "Tous les statuts"}</option>`).join("")}
       </select>
+      ${isAdmin ? `<select class="form-select" style="max-width:240px" name="shop"><option value="0">Toutes les boutiques</option>${shops.items.map((b) => `<option value="${b.id}" ${b.id === shopId ? "selected" : ""}>${esc(b.name)}</option>`).join("")}</select>` : ""}
       <button class="btn btn-ghost" type="submit">Filtrer</button>
+      ${isAdmin ? `<span class="pill UNKNOWN"><i class="bi bi-eye"></i> Lecture seule</span>` : ""}
     </form>
     <section class="card-dark table-wrap"><table class="data"><thead><tr><th>ID</th><th>Client</th><th>Libellé</th><th>Statut</th><th>Montant</th><th>Date</th><th></th></tr></thead><tbody>
       ${data.items.map((o) => `<tr>
-        <td>#${o.id}</td>
+        <td>#${o.id}${isNew(o.created_at) ? ` <span class="pill NEW">Nouveau</span>` : ""}</td>
         <td>${esc(o.full_name)}<div class="fine">${esc(o.phone_mask)}${o.phone_normalized ? ` · <button class="btn btn-link btn-sm p-0" data-reveal="${esc(o.phone_normalized)}">afficher</button>` : ""}</div></td>
-        <td>${esc(o.label)}${me.role === "ADMIN" ? `<div class="fine">${esc(o.shop)}</div>` : ""}</td>
+        <td>${esc(o.label)}${isAdmin ? `<div class="fine"><i class="bi bi-shop"></i> ${esc(o.shop)}</div>` : ""}</td>
         <td>${statusPill(o.status)}</td><td>${money(o.amount)}</td><td>${esc(o.order_date)}</td>
-        <td>${o.status === "PENDING" && (me.role === "SHOP" || me.role === "ADMIN") ? `<button class="btn btn-ghost btn-sm" data-confirm="${o.id}">Confirmer l'issue</button>` : ""}</td>
+        <td>${o.status === "PENDING" && me.role === "SHOP" ? `<button class="btn btn-ghost btn-sm" data-confirm="${o.id}">Confirmer l'issue</button>` : ""}</td>
       </tr>`).join("") || `<tr><td colspan="7">Aucune commande.</td></tr>`}
     </tbody></table>
     <div class="pager"><span>${data.total} commandes</span>
@@ -386,7 +516,7 @@ async function renderOrders(view, params) {
   $("#order-filters").addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    location.hash = `#/orders?q=${encodeURIComponent(fd.get("q"))}&status=${encodeURIComponent(fd.get("status"))}`;
+    location.hash = `#/orders?q=${encodeURIComponent(fd.get("q"))}&status=${encodeURIComponent(fd.get("status"))}${fd.get("shop") ? `&shop=${encodeURIComponent(fd.get("shop"))}` : ""}`;
   });
   view.querySelectorAll("[data-page]").forEach((b) => b.addEventListener("click", () => {
     params.set("page", b.dataset.page);
@@ -613,7 +743,7 @@ function paintLot() {
         <td><button class="btn btn-ghost btn-sm" data-save="${l.line}" ${lot.status !== "A_VERIFIER" ? "disabled" : ""}>Corriger</button></td>
       </tr>`).join("")}
     </tbody></table></div>
-    ${lot.report ? `<pre class="fine mt-2">${esc(JSON.stringify(lot.report, null, 2))}</pre>` : `<button class="btn btn-accent mt-3" id="validate-lot" ${lot.status !== "A_VERIFIER" ? "disabled" : ""}>Valider et enregistrer les lignes correctes</button>`}
+    ${lot.report ? `<pre class="fine mt-2">${esc(JSON.stringify(lot.report, null, 2))}</pre><a class="btn btn-accent mt-2" href="#/orders">Voir les commandes</a>` : `<button class="btn btn-accent mt-3" id="validate-lot" ${lot.status !== "A_VERIFIER" ? "disabled" : ""}>Valider et enregistrer les lignes correctes</button>`}
   </section>`;
   box.querySelectorAll("[data-save]").forEach((b) => b.addEventListener("click", async () => {
     const row = box.querySelector(`[data-line="${b.dataset.save}"]`);
@@ -630,7 +760,10 @@ function paintLot() {
       const report = await api(`/lots/${lot.lot_id}/validate`, { method: "POST" });
       currentLot = await api(`/lots/${lot.lot_id}`);
       paintLot();
-      toast(`${report.report.inserted} commande(s) enregistrée(s).`);
+      const rep = report.report;
+      toast(`${rep.inserted} commande(s) enregistrée(s).`);
+      // Tout est passé : on ouvre directement la liste, les nouvelles commandes sont en haut.
+      if (rep.inserted > 0 && rep.rejected.length === 0) location.hash = "#/orders";
     } catch (err) { toast(err.message, "err"); }
   });
 }
@@ -702,12 +835,12 @@ async function renderHistory(view, params) {
 async function renderAdmin(view, path) {
   if (me.role !== "ADMIN") { view.innerHTML = `<div class="card-dark">Accès administrateur requis.</div>`; return; }
   if (path === "/admin/stats") return renderAdminStats(view);
-  setGreet("Administration", "Boutiques, comptes, paramètres autorisés du moteur, journal.");
-  const [shops, users, settings, audit] = await Promise.all([
-    api("/admin/boutiques"), api("/admin/users"), api("/admin/settings"), api("/admin/audit"),
-  ]);
-  const fields = Object.entries(settings.values);
-  view.innerHTML = `
+  const page = path === "/admin/engine" ? "engine" : path === "/admin/audit" ? "audit" : "shops";
+  let body = "";
+  if (page === "shops") {
+    setGreet("Boutiques et comptes", "Créer, activer ou désactiver une boutique ou un compte. L'administrateur ne modifie jamais les commandes.");
+    const [shops, users] = await Promise.all([api("/admin/boutiques"), api("/admin/users")]);
+    body = `
     <div class="row g-3">
       <section class="col-lg-7 card-dark"><h2 class="h5">Boutiques</h2>
         <div class="table-wrap"><table class="data"><thead><tr><th>Nom</th><th>Lieu</th><th>Commandes</th><th></th></tr></thead><tbody>
@@ -718,7 +851,7 @@ async function renderAdmin(view, path) {
           <div class="col-md-4"><input class="form-control" name="name" placeholder="Nom" required></div>
           <div class="col-md-3"><input class="form-control" name="governorate" placeholder="Gouvernorat" required></div>
           <div class="col-md-3"><input class="form-control" name="city" placeholder="Ville" required></div>
-          <div class="col-md-8"><input class="form-control" name="address" placeholder="Adresse fictive" required></div>
+          <div class="col-md-8"><input class="form-control" name="address" placeholder="Adresse" required></div>
           <div class="col-md-4"><button class="btn btn-accent w-100">Ajouter</button></div>
         </form>
       </section>
@@ -730,25 +863,33 @@ async function renderAdmin(view, path) {
         <form id="new-user" class="mt-2">
           <input class="form-control mb-1" name="full_name" placeholder="Nom" required>
           <input class="form-control mb-1" name="email" type="email" placeholder="E-mail" required>
-          <input class="form-control mb-1" name="password" type="text" placeholder="Mot de passe (8+)" required>
+          <input class="form-control mb-1" name="password" type="password" placeholder="Mot de passe (8 caractères minimum)" required minlength="8" autocomplete="new-password">
           <div class="d-flex gap-2"><select class="form-select" name="role"><option>SHOP</option><option>ADMIN</option></select>
           <input class="form-control" name="boutique_id" type="number" placeholder="ID boutique"></div>
           <button class="btn btn-accent mt-2">Créer le compte</button>
         </form>
       </section>
-      <section class="col-lg-7 card-dark"><h2 class="h5">Paramètres autorisés</h2>
-        <p class="fine">${esc(settings.note)}</p>
-        <form id="settings-form" class="row g-2">
-          ${fields.map(([k, v]) => `<div class="col-md-4"><label class="form-label fine">${esc(k)}</label><input class="form-control" name="${esc(k)}" value="${esc(v)}"></div>`).join("")}
-          <div class="col-12 d-flex gap-2"><button class="btn btn-accent" type="submit">Enregistrer</button><button class="btn btn-ghost" type="button" id="reset-settings">Restaurer le Sprint 1</button></div>
-        </form>
-      </section>
-      <section class="col-lg-5 card-dark"><h2 class="h5">Journal</h2>
-        <div style="max-height:360px;overflow:auto"><table class="data"><tbody>
-          ${audit.items.map((a) => `<tr><td class="fine">${esc(a.created_at)}<br>${esc(a.actor_email)} · ${esc(a.action)}</td><td>${esc(a.details)}</td></tr>`).join("")}
-        </tbody></table></div>
-      </section>
     </div>`;
+  } else if (page === "engine") {
+    setGreet("Paramètres du moteur", "Réglages autorisés du score de fiabilité.");
+    const settings = await api("/admin/settings");
+    body = `
+    <section class="card-dark" style="max-width:900px"><h2 class="h5">Paramètres autorisés</h2>
+      <p class="fine">${esc(settings.note)}</p>
+      <form id="settings-form" class="row g-2">
+        ${Object.entries(settings.values).map(([k, v]) => `<div class="col-md-4"><label class="form-label fine">${esc(k)}</label><input class="form-control" name="${esc(k)}" value="${esc(v)}"></div>`).join("")}
+        <div class="col-12 d-flex gap-2"><button class="btn btn-accent" type="submit">Enregistrer</button><button class="btn btn-ghost" type="button" id="reset-settings">Restaurer le Sprint 1</button></div>
+      </form>
+    </section>`;
+  } else {
+    setGreet("Journal d'audit", "Qui a fait quoi, et quand : connexions, imports, décisions, créations.");
+    const audit = await api("/admin/audit");
+    body = `
+    <section class="card-dark table-wrap"><table class="data"><thead><tr><th>Date</th><th>Auteur</th><th>Action</th><th>Détail</th></tr></thead><tbody>
+      ${audit.items.map((a) => `<tr><td class="fine">${esc(a.created_at)}</td><td>${esc(a.actor_email)}</td><td><span class="pill UNKNOWN">${esc(a.action)}</span></td><td>${esc(a.details)}</td></tr>`).join("")}
+    </tbody></table></section>`;
+  }
+  view.innerHTML = body;
   view.querySelectorAll("[data-shop]").forEach((b) => b.addEventListener("click", async () => {
     await api(`/admin/boutiques/${b.dataset.shop}?active=${b.dataset.active === "1" ? "true" : "false"}`, { method: "PATCH" });
     route();
@@ -759,7 +900,7 @@ async function renderAdmin(view, path) {
       route();
     } catch (err) { toast(err.message, "err"); }
   }));
-  $("#new-shop").addEventListener("submit", async (e) => {
+  $("#new-shop")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     try {
@@ -767,7 +908,7 @@ async function renderAdmin(view, path) {
       toast("Boutique créée."); route();
     } catch (err) { toast(err.message, "err"); }
   });
-  $("#new-user").addEventListener("submit", async (e) => {
+  $("#new-user")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const body = Object.fromEntries(fd.entries());
@@ -775,7 +916,7 @@ async function renderAdmin(view, path) {
     try { await api("/admin/users", { method: "POST", body }); toast("Compte créé."); route(); }
     catch (err) { toast(err.message, "err"); }
   });
-  $("#settings-form").addEventListener("submit", async (e) => {
+  $("#settings-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const payload = {};
@@ -783,7 +924,7 @@ async function renderAdmin(view, path) {
     try { await api("/admin/settings", { method: "PUT", body: payload }); toast("Paramètres appliqués au moteur en mémoire."); }
     catch (err) { toast(err.message, "err"); }
   });
-  $("#reset-settings").addEventListener("click", async () => {
+  $("#reset-settings")?.addEventListener("click", async () => {
     await api("/admin/settings/reset", { method: "POST" });
     toast("Constantes du Sprint 1 restaurées.");
     route();

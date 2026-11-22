@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import secrets
 import sqlite3
 import sys
@@ -152,6 +153,13 @@ def user_from_request(request: Request) -> dict:
 def require_admin(user: dict) -> dict:
     if user["role"] != "ADMIN":
         raise HTTPException(403, "Réservé à l'administrateur.")
+    return user
+
+
+def require_shop(user: dict) -> dict:
+    """Les commandes appartiennent aux boutiques : l'administrateur les supervise (lecture seule)."""
+    if user["role"] != "SHOP" or not user["boutique_id"]:
+        raise HTTPException(403, "Action réservée aux boutiques : l'administrateur supervise les commandes en lecture seule.")
     return user
 
 
@@ -308,6 +316,16 @@ class BoutiqueIn(BaseModel):
     active: bool = True
 
 
+class RegisterShopIn(BaseModel):
+    shop_name: str = Field(min_length=2, max_length=120)
+    governorate: str = Field(min_length=2, max_length=60)
+    city: str = Field(min_length=2, max_length=80)
+    address: str = Field(min_length=3, max_length=200)
+    full_name: str = Field(min_length=2, max_length=120)
+    email: str = Field(max_length=190)
+    password: str = Field(min_length=8, max_length=128)
+
+
 class UserIn(BaseModel):
     email: str
     full_name: str
@@ -343,6 +361,49 @@ def login(body: LoginIn):
         audit(con, row["email"], "LOGIN", "Connexion à la démo web.")
         con.commit()
         payload = public_user(dict(row), con)
+    finally:
+        con.close()
+    response = JSONResponse(payload)
+    response.set_cookie("to_session", sid, httponly=True, samesite="lax", path="/")
+    return response
+
+
+@app.post("/api/register-shop")
+def register_shop(body: RegisterShopIn):
+    """Inscription publique : crée la boutique ET son compte gérant, puis ouvre la session."""
+    email = body.email.strip().lower()
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        raise HTTPException(422, "Adresse e-mail invalide.")
+    if body.password.strip().lower() == email:
+        raise HTTPException(422, "Le mot de passe ne doit pas être identique à l'e-mail.")
+    name = " ".join(body.shop_name.split())
+    con = db()
+    try:
+        if con.execute("SELECT 1 FROM users WHERE email=?", (email,)).fetchone():
+            raise HTTPException(409, "Cet e-mail est déjà utilisé.")
+        if con.execute("SELECT 1 FROM boutique WHERE lower(name)=lower(?)", (name,)).fetchone():
+            raise HTTPException(409, "Une boutique porte déjà ce nom. Ajoutez la ville ou un complément.")
+        try:
+            cur = con.execute(
+                "INSERT INTO boutique (name, governorate, city, address, active, created_at) VALUES (?,?,?,?,1,?)",
+                (name, body.governorate.strip(), body.city.strip(), body.address.strip(), now_iso()),
+            )
+            boutique_id = cur.lastrowid
+            salt = secrets.token_bytes(16)
+            dk = hashlib.pbkdf2_hmac("sha256", body.password.encode(), salt, 120_000)
+            ucur = con.execute(
+                "INSERT INTO users (email, password, full_name, role, boutique_id, active) VALUES (?,?,?,?,?,1)",
+                (email, salt.hex() + "$" + dk.hex(), " ".join(body.full_name.split()), "SHOP", boutique_id),
+            )
+        except sqlite3.IntegrityError:
+            con.rollback()
+            raise HTTPException(409, "Cet e-mail est déjà utilisé.")
+        audit(con, email, "SHOP_REGISTER", f"Boutique « {name} » créée par inscription.")
+        con.commit()
+        row = con.execute("SELECT * FROM users WHERE id=?", (ucur.lastrowid,)).fetchone()
+        payload = public_user(dict(row), con)
+        sid = secrets.token_urlsafe(32)
+        SESSIONS[sid] = {"uid": row["id"]}
     finally:
         con.close()
     response = JSONResponse(payload)
@@ -462,7 +523,7 @@ def dashboard_for(con, boutique_id: Optional[int]):
         f"""SELECT o.id, c.full_name, c.phone_mask, o.label, o.status, o.amount, o.order_date, b.name AS shop
             FROM customer_order o JOIN customer c ON c.id=o.customer_id JOIN boutique b ON b.id=o.boutique_id
             {where.replace('boutique_id', 'o.boutique_id') if where else ''}
-            ORDER BY o.order_date DESC, o.id DESC LIMIT 8""",
+            ORDER BY o.id DESC LIMIT 8""",
         params,
     ).fetchall()
     delivered = con.execute(
@@ -520,14 +581,14 @@ def dashboard(request: Request):
 
 
 @app.get("/api/orders")
-def list_orders(request: Request, page: int = 1, status: str = "", q: str = "", page_size: int = 15):
+def list_orders(request: Request, page: int = 1, status: str = "", q: str = "", page_size: int = 15, boutique_id: int = 0):
     user = user_from_request(request)
     page = max(1, page)
     page_size = min(50, max(5, page_size))
     con = db()
     try:
         clauses, params = [], []
-        scope = shop_scope(user)
+        scope = shop_scope(user, boutique_id or None)
         if scope:
             clauses.append("o.boutique_id=?")
             params.append(scope)
@@ -543,13 +604,13 @@ def list_orders(request: Request, page: int = 1, status: str = "", q: str = "", 
             f"SELECT COUNT(*) n FROM customer_order o JOIN customer c ON c.id=o.customer_id {where}", params
         ).fetchone()["n"]
         rows = con.execute(
-            f"""SELECT o.id, o.label, o.amount, o.status, o.order_date, o.boutique_id, b.name AS shop,
+            f"""SELECT o.id, o.label, o.amount, o.status, o.order_date, o.created_at, o.boutique_id, b.name AS shop,
                       c.full_name, c.phone_mask, c.phone_normalized, c.city
                FROM customer_order o
                JOIN customer c ON c.id=o.customer_id
                JOIN boutique b ON b.id=o.boutique_id
                {where}
-               ORDER BY o.order_date DESC, o.id DESC
+               ORDER BY o.id DESC
                LIMIT ? OFFSET ?""",
             [*params, page_size, (page - 1) * page_size],
         ).fetchall()
@@ -567,17 +628,13 @@ def list_orders(request: Request, page: int = 1, status: str = "", q: str = "", 
 @app.post("/api/orders")
 def create_order(request: Request, body: OrderIn):
     user = user_from_request(request)
+    require_shop(user)
     phone = telephone.normaliser(body.phone)
     if not phone:
         raise HTTPException(422, "Numéro tunisien invalide (8 chiffres).")
     con = db()
     try:
-        if user["role"] == "SHOP":
-            boutique_id = int(user["boutique_id"])
-        else:
-            boutique_id = body.boutique_id
-            if not boutique_id:
-                raise HTTPException(422, "boutique_id requis pour un administrateur.")
+        boutique_id = int(user["boutique_id"])
         shop = con.execute("SELECT * FROM boutique WHERE id=? AND active=1", (boutique_id,)).fetchone()
         if not shop:
             raise HTTPException(404, "Boutique introuvable ou inactive.")
@@ -616,6 +673,7 @@ def create_order(request: Request, body: OrderIn):
 @app.post("/api/orders/{order_id}/confirm")
 def confirm_order(order_id: int, request: Request, body: ConfirmIn):
     user = user_from_request(request)
+    require_shop(user)
     if body.status not in ("DELIVERED", "REFUSED", "NOT_COLLECTED"):
         raise HTTPException(422, "Statut final attendu : DELIVERED, REFUSED ou NOT_COLLECTED.")
     con = db()
@@ -623,7 +681,7 @@ def confirm_order(order_id: int, request: Request, body: ConfirmIn):
         row = con.execute("SELECT * FROM customer_order WHERE id=?", (order_id,)).fetchone()
         if not row:
             raise HTTPException(404, "Commande introuvable.")
-        if user["role"] == "SHOP" and row["boutique_id"] != user["boutique_id"]:
+        if row["boutique_id"] != user["boutique_id"]:
             raise HTTPException(403, "Cette commande appartient à une autre boutique.")
         if row["status"] != "PENDING":
             raise HTTPException(409, "Seule une commande en attente peut être confirmée.")
@@ -932,7 +990,7 @@ def validate_lot(lot_id: str, request: Request):
                 con.execute(
                     """INSERT INTO customer (full_name, phone_normalized, phone_hash, phone_mask, governorate, city)
                        VALUES (?,?,?,?,?,?)""",
-                    (line.get("label") or "Client importé", phone, digest, mask_phone(phone), shop["governorate"], shop["city"]),
+                    ("Client " + mask_phone(phone), phone, digest, mask_phone(phone), shop["governorate"], shop["city"]),
                 )
                 customer = con.execute("SELECT * FROM customer WHERE phone_hash=?", (digest,)).fetchone()
             amount = line.get("amount_value")
